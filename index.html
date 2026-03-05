@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Bowling Arsenal Builder</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+
+body{
+font-family:Arial;
+background:#121212;
+color:white;
+padding:20px;
+}
+
+.ball{
+background:#1e1e1e;
+padding:15px;
+margin-bottom:12px;
+border-radius:10px;
+display:flex;
+gap:12px;
+align-items:center;
+}
+
+.ball img{
+width:60px;
+height:60px;
+border-radius:50%;
+object-fit:cover;
+}
+
+button{
+background:#3a7cff;
+border:none;
+padding:8px 12px;
+color:white;
+border-radius:6px;
+cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Bowling Arsenal Builder</h1>
+
+<input id="search" placeholder="Search balls..." style="width:100%;padding:10px;margin-bottom:20px;">
+
+<div id="balls"></div>
+
+<script>
+
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRbZWI7vO1tejo-yhWq-Rga9AZZqDWJ3gZXo2RHFpOXERHhleUpgfP_M86UeX14D-xVSFbMoo1iD5t/pub?gid=0&single=true&output=csv";
+
+fetch(CSV_URL)
+.then(res => res.text())
+.then(csv => {
+
+const rows = csv.split("\n").slice(1);
+const container = document.getElementById("balls");
+
+rows.forEach(row => {
+
+const cols = row.split(",");
+
+const brand = cols[0];
+const ball = cols[1];
+const category = cols[2];
+const image = cols[3];
+
+const div = document.createElement("div");
+div.className = "ball";
+
+div.innerHTML = `
+<img src="${image}">
+<div>
+<b>${brand} ${ball}</b><br>
+${category}<br>
+<button onclick="addBall('${ball}','${category}')">Add to Arsenal</button>
+</div>
+`;
+
+container.appendChild(div);
+
+});
+
+});
+
+function addBall(name,category){
+
+let arsenal = JSON.parse(localStorage.getItem("arsenal") || "[]");
+
+arsenal.push({name,category});
+
+localStorage.setItem("arsenal",JSON.stringify(arsenal));
+
+alert(name + " added to arsenal");
+
+}
+
+</script>
+
+</body>
+</html>
