@@ -1,106 +1,455 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Bowling Arsenal Builder</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bowling Arsenal Builder</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<style>
+  <style>
+    body{
+      font-family: Arial, sans-serif;
+      background:#121212;
+      color:#fff;
+      padding:16px;
+      margin:0;
+    }
+    h1{ margin: 8px 0 14px; font-size: 22px; }
+    .tabs{
+      display:flex;
+      gap:8px;
+      margin-bottom:14px;
+      position: sticky;
+      top: 0;
+      background:#121212;
+      padding: 10px 0;
+      z-index: 10;
+    }
+    .tabbtn{
+      flex:1;
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid #2a2a2a;
+      background:#1a1a1a;
+      color:#fff;
+      cursor:pointer;
+    }
+    .tabbtn.active{
+      border-color:#3a7cff;
+      background:#18223a;
+    }
+    .panel{ display:none; }
+    .panel.active{ display:block; }
 
-body{
-font-family:Arial;
-background:#121212;
-color:white;
-padding:20px;
-}
+    input, select{
+      width:100%;
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid #2a2a2a;
+      background:#1a1a1a;
+      color:#fff;
+      margin-bottom:12px;
+      box-sizing:border-box;
+    }
 
-.ball{
-background:#1e1e1e;
-padding:15px;
-margin-bottom:12px;
-border-radius:10px;
-display:flex;
-gap:12px;
-align-items:center;
-}
-
-.ball img{
-width:60px;
-height:60px;
-border-radius:50%;
-object-fit:cover;
-}
-
-button{
-background:#3a7cff;
-border:none;
-padding:8px 12px;
-color:white;
-border-radius:6px;
-cursor:pointer;
-}
-
-</style>
+    .ball{
+      background:#1e1e1e;
+      padding:12px;
+      margin:10px 0;
+      border-radius:12px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      border:1px solid #2a2a2a;
+    }
+    .ball img{
+      width:60px;
+      height:60px;
+      border-radius:14px;
+      object-fit:cover;
+      background:#0f0f0f;
+    }
+    .ball .meta{
+      flex:1;
+      min-width:0;
+    }
+    .ball .meta b{
+      display:block;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      font-size:15px;
+    }
+    .ball .meta .cat{ opacity:0.85; margin-top:3px; font-size:13px; }
+    .ball .meta .sub{ opacity:0.65; margin-top:2px; font-size:12px; }
+    button{
+      background:#3a7cff;
+      border:none;
+      padding:8px 12px;
+      color:white;
+      border-radius:10px;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+    button.secondary{
+      background:#2a2a2a;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+    .slot{
+      border:1px solid #2a2a2a;
+      background:#1a1a1a;
+      border-radius:12px;
+      padding:12px;
+    }
+    .slot .row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+    }
+    .badge{
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:12px;
+      border:1px solid #2a2a2a;
+      background:#141414;
+    }
+    .missing{ border-color:#ff5a5a; color:#ffb0b0; }
+    .covered{ border-color:#4dd97a; color:#b8ffd0; }
+    .small{
+      font-size:12px;
+      opacity:0.75;
+      margin-top:8px;
+      line-height:1.4;
+      white-space:pre-line;
+    }
+  </style>
 </head>
 
 <body>
+  <h1>Bowling Arsenal Builder</h1>
 
-<h1>Bowling Arsenal Builder</h1>
+  <div class="tabs">
+    <button class="tabbtn active" data-tab="db">Database</button>
+    <button class="tabbtn" data-tab="ars">My Arsenal</button>
+    <button class="tabbtn" data-tab="rec">Recommendations</button>
+  </div>
 
-<input id="search" placeholder="Search balls..." style="width:100%;padding:10px;margin-bottom:20px;">
+  <!-- Database -->
+  <div id="panel-db" class="panel active">
+    <input id="search" placeholder="Search by brand or ball name..." />
+    <div id="dbList"></div>
+  </div>
 
-<div id="balls"></div>
+  <!-- My Arsenal -->
+  <div id="panel-ars" class="panel">
+    <div class="grid" id="arsenalGrid"></div>
+    <div id="arsenalList" style="margin-top:12px;"></div>
+    <button class="secondary" style="margin-top:12px;" onclick="clearArsenal()">Clear Arsenal</button>
+  </div>
+
+  <!-- Recommendations -->
+  <div id="panel-rec" class="panel">
+    <div id="missingSummary" class="small"></div>
+
+    <select id="catSelect"></select>
+    <div id="recList"></div>
+  </div>
 
 <script>
+  // 1) Put your Google "Publish to web" CSV link here:
+  const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRbZWI7vO1tejo-yhWq-Rga9AZZqDWJ3gZXo2RHFpOXERHhleUpgfP_M86UeX14D-xVSFbMoo1iD5t/pub?gid=0&single=true&output=csv";
 
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRbZWI7vO1tejo-yhWq-Rga9AZZqDWJ3gZXo2RHFpOXERHhleUpgfP_M86UeX14D-xVSFbMoo1iD5t/pub?gid=0&single=true&output=csv";
+  // Fixed 8 categories
+  const CATEGORIES = [
+    "Strong/Smooth",
+    "Strong/Sharp",
+    "Medium/Smooth",
+    "Medium/Sharp",
+    "Weak/Smooth",
+    "Weak/Sharp",
+    "Urethane",
+    "Urethane-like"
+  ];
 
-fetch(CSV_URL)
-.then(res => res.text())
-.then(csv => {
+  // In-memory database
+  let balls = [];
 
-const rows = csv.split("\n").slice(1);
-const container = document.getElementById("balls");
+  // Local arsenal (persisted)
+  function getArsenal(){
+    return JSON.parse(localStorage.getItem("arsenal") || "[]");
+  }
+  function setArsenal(a){
+    localStorage.setItem("arsenal", JSON.stringify(a));
+  }
 
-rows.forEach(row => {
+  // --- Tabs ---
+  document.querySelectorAll(".tabbtn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".tabbtn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const tab = btn.dataset.tab;
 
-const cols = row.split(",");
+      document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+      document.getElementById(`panel-${tab}`).classList.add("active");
 
-const brand = cols[0];
-const ball = cols[1];
-const category = cols[2];
-const image = cols[3];
+      // Refresh panels on open
+      if(tab === "ars") renderArsenal();
+      if(tab === "rec") renderRecommendations();
+    });
+  });
 
-const div = document.createElement("div");
-div.className = "ball";
+  // --- CSV parsing (handles commas inside quotes) ---
+  function parseCSV(text){
+    const rows = [];
+    let row = [], cur = "", inQuotes = false;
 
-div.innerHTML = `
-<img src="${image}">
-<div>
-<b>${brand} ${ball}</b><br>
-${category}<br>
-<button onclick="addBall('${ball}','${category}')">Add to Arsenal</button>
-</div>
-`;
+    for(let i=0; i<text.length; i++){
+      const ch = text[i];
+      const next = text[i+1];
 
-container.appendChild(div);
+      if(ch === '"' && inQuotes && next === '"'){ // escaped quote
+        cur += '"'; i++; continue;
+      }
+      if(ch === '"'){
+        inQuotes = !inQuotes; continue;
+      }
+      if(ch === ',' && !inQuotes){
+        row.push(cur.trim()); cur = ""; continue;
+      }
+      if((ch === '\n' || ch === '\r') && !inQuotes){
+        if(cur.length || row.length){
+          row.push(cur.trim());
+          rows.push(row);
+        }
+        row = []; cur = "";
+        continue;
+      }
+      cur += ch;
+    }
+    if(cur.length || row.length){
+      row.push(cur.trim());
+      rows.push(row);
+    }
+    return rows;
+  }
 
-});
+  // --- Load database from CSV ---
+  async function loadDatabase(){
+    const res = await fetch(CSV_URL);
+    const csv = await res.text();
+    const table = parseCSV(csv);
 
-});
+    // Expect headers: Brand,Ball,Category,Image,ReleaseYear,Notes
+    const headers = table[0].map(h => h.replace(/\uFEFF/g,"")); // strip BOM if present
+    const idx = (name) => headers.findIndex(h => h.toLowerCase() === name.toLowerCase());
 
-function addBall(name,category){
+    const iBrand = idx("Brand");
+    const iBall = idx("Ball");
+    const iCategory = idx("Category");
+    const iImage = idx("Image");
+    const iYear = idx("ReleaseYear");
+    const iNotes = idx("Notes");
 
-let arsenal = JSON.parse(localStorage.getItem("arsenal") || "[]");
+    balls = table.slice(1)
+      .filter(r => r[iBall] && r[iCategory])
+      .map(r => ({
+        brand: r[iBrand] || "",
+        name: r[iBall] || "",
+        category: r[iCategory] || "",
+        image: r[iImage] || "",
+        year: r[iYear] || "",
+        notes: r[iNotes] || ""
+      }));
 
-arsenal.push({name,category});
+    renderDBList();
+    setupCategoryDropdown();
+  }
 
-localStorage.setItem("arsenal",JSON.stringify(arsenal));
+  // --- Database list ---
+  function renderDBList(){
+    const q = (document.getElementById("search").value || "").toLowerCase();
+    const list = document.getElementById("dbList");
+    list.innerHTML = "";
 
-alert(name + " added to arsenal");
+    const filtered = balls.filter(b =>
+      (b.brand + " " + b.name).toLowerCase().includes(q)
+    );
 
-}
+    filtered.slice(0, 300).forEach(b => {
+      const div = document.createElement("div");
+      div.className = "ball";
+      div.innerHTML = `
+        <img src="${b.image}" onerror="this.style.display='none'">
+        <div class="meta">
+          <b>${escapeHtml(b.brand)} ${escapeHtml(b.name)}</b>
+          <div class="cat">${escapeHtml(b.category)}</div>
+          <div class="sub">${b.year ? "Release: " + escapeHtml(b.year) : ""}</div>
+        </div>
+        <button onclick="addToArsenal('${escapeJs(b.name)}','${escapeJs(b.category)}')">Add</button>
+      `;
+      list.appendChild(div);
+    });
 
+    if(filtered.length === 0){
+      list.innerHTML = `<div class="small">No matches. Try a different search.</div>`;
+    }
+  }
+
+  document.getElementById("search").addEventListener("input", renderDBList);
+
+  function addToArsenal(name, category){
+    const arsenal = getArsenal();
+    // prevent exact duplicates
+    if(arsenal.some(x => x.name === name && x.category === category)) return;
+    arsenal.push({name, category});
+    setArsenal(arsenal);
+    alert("Added to arsenal!");
+  }
+
+  // --- My Arsenal ---
+  function renderArsenal(){
+    const arsenal = getArsenal();
+
+    // Grid by category
+    const grid = document.getElementById("arsenalGrid");
+    grid.innerHTML = "";
+
+    CATEGORIES.forEach(cat => {
+      const inCat = arsenal.filter(a => a.category === cat).map(a => a.name);
+      const slot = document.createElement("div");
+      slot.className = "slot";
+
+      const statusClass = inCat.length ? "covered" : "missing";
+      const statusText = inCat.length ? "Covered" : "Missing";
+
+      slot.innerHTML = `
+        <div class="row">
+          <div><b>${cat}</b></div>
+          <div class="badge ${statusClass}">${statusText}</div>
+        </div>
+        <div class="small">${inCat.length ? inCat.join("\n") : "No ball in this slot yet."}</div>
+      `;
+      grid.appendChild(slot);
+    });
+
+    // List of items with remove buttons
+    const list = document.getElementById("arsenalList");
+    list.innerHTML = "";
+
+    if(arsenal.length === 0){
+      list.innerHTML = `<div class="small">Your arsenal is empty. Go to the Database tab and tap “Add”.</div>`;
+      return;
+    }
+
+    arsenal.forEach((a, idx) => {
+      const div = document.createElement("div");
+      div.className = "ball";
+      div.innerHTML = `
+        <div class="meta">
+          <b>${escapeHtml(a.name)}</b>
+          <div class="cat">${escapeHtml(a.category)}</div>
+        </div>
+        <button class="secondary" onclick="removeFromArsenal(${idx})">Remove</button>
+      `;
+      list.appendChild(div);
+    });
+  }
+
+  function removeFromArsenal(index){
+    const arsenal = getArsenal();
+    arsenal.splice(index, 1);
+    setArsenal(arsenal);
+    renderArsenal();
+  }
+
+  function clearArsenal(){
+    if(!confirm("Clear your entire arsenal?")) return;
+    setArsenal([]);
+    renderArsenal();
+  }
+
+  // --- Recommendations ---
+  function setupCategoryDropdown(){
+    const sel = document.getElementById("catSelect");
+    sel.innerHTML = "";
+    CATEGORIES.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c; opt.textContent = c;
+      sel.appendChild(opt);
+    });
+    sel.addEventListener("change", renderRecommendations);
+  }
+
+  function renderRecommendations(){
+    const arsenal = getArsenal();
+    const owned = new Set(arsenal.map(a => a.name));
+
+    // Missing categories summary
+    const missingCats = CATEGORIES.filter(cat => !arsenal.some(a => a.category === cat));
+    document.getElementById("missingSummary").textContent =
+      missingCats.length
+        ? `Missing slots:\n• ${missingCats.join("\n• ")}`
+        : "Nice — you have at least one ball in every slot.";
+
+    // Auto-select first missing category if any
+    const sel = document.getElementById("catSelect");
+    if(missingCats.length && sel.value && !missingCats.includes(sel.value)){
+      sel.value = missingCats[0];
+    } else if(missingCats.length && !sel.value){
+      sel.value = missingCats[0];
+    }
+
+    const chosen = sel.value || CATEGORIES[0];
+
+    // Recommend balls in that category excluding owned
+    const recs = balls
+      .filter(b => b.category === chosen)
+      .filter(b => !owned.has(b.name))
+      .slice(0, 50);
+
+    const list = document.getElementById("recList");
+    list.innerHTML = "";
+
+    if(recs.length === 0){
+      list.innerHTML = `<div class="small">No recommendations found for ${chosen}. Add more balls to your database or you may already own the options listed.</div>`;
+      return;
+    }
+
+    recs.forEach(b => {
+      const div = document.createElement("div");
+      div.className = "ball";
+      div.innerHTML = `
+        <img src="${b.image}" onerror="this.style.display='none'">
+        <div class="meta">
+          <b>${escapeHtml(b.brand)} ${escapeHtml(b.name)}</b>
+          <div class="cat">${escapeHtml(b.category)}</div>
+          <div class="sub">${b.year ? "Release: " + escapeHtml(b.year) : ""}</div>
+        </div>
+        <button onclick="addToArsenal('${escapeJs(b.name)}','${escapeJs(b.category)}')">Add</button>
+      `;
+      list.appendChild(div);
+    });
+  }
+
+  // --- Helpers ---
+  function escapeHtml(str){
+    return (str || "").replace(/[&<>"']/g, m => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    })[m]);
+  }
+  function escapeJs(str){
+    return (str || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+  }
+
+  // Load on start
+  loadDatabase().catch(err => {
+    document.getElementById("dbList").innerHTML =
+      `<div class="small">Could not load your CSV. Check that your CSV link is correct and publicly accessible.\n\nError: ${String(err)}</div>`;
+  });
 </script>
-
 </body>
 </html>
