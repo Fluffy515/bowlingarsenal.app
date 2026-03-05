@@ -13,41 +13,47 @@
       margin:0;
     }
     h1{ margin: 8px 0 14px; font-size: 22px; }
+
+    /* Clear 3-tab UI */
     .tabs{
       display:flex;
-      gap:8px;
+      gap:10px;
       margin-bottom:14px;
       position: sticky;
       top: 0;
       background:#121212;
-      padding: 10px 0;
+      padding: 12px 0;
       z-index: 10;
     }
     .tabbtn{
       flex:1;
-      padding:10px 12px;
-      border-radius:10px;
+      padding:12px 12px;
+      border-radius:12px;
       border:1px solid #2a2a2a;
       background:#1a1a1a;
       color:#fff;
       cursor:pointer;
+      font-weight:700;
+      font-size:14px;
     }
     .tabbtn.active{
+      background:#3a7cff;
       border-color:#3a7cff;
-      background:#18223a;
     }
+
     .panel{ display:none; }
     .panel.active{ display:block; }
 
     input, select{
       width:100%;
       padding:10px 12px;
-      border-radius:10px;
+      border-radius:12px;
       border:1px solid #2a2a2a;
       background:#1a1a1a;
       color:#fff;
       margin-bottom:12px;
       box-sizing:border-box;
+      font-size:14px;
     }
 
     .ball{
@@ -80,18 +86,21 @@
     }
     .ball .meta .cat{ opacity:0.85; margin-top:3px; font-size:13px; }
     .ball .meta .sub{ opacity:0.65; margin-top:2px; font-size:12px; }
+
     button{
       background:#3a7cff;
       border:none;
-      padding:8px 12px;
+      padding:9px 12px;
       color:white;
-      border-radius:10px;
+      border-radius:12px;
       cursor:pointer;
       white-space:nowrap;
+      font-weight:700;
     }
     button.secondary{
       background:#2a2a2a;
     }
+
     .grid{
       display:grid;
       grid-template-columns: 1fr;
@@ -116,14 +125,15 @@
       font-size:12px;
       border:1px solid #2a2a2a;
       background:#141414;
+      font-weight:700;
     }
     .missing{ border-color:#ff5a5a; color:#ffb0b0; }
     .covered{ border-color:#4dd97a; color:#b8ffd0; }
     .small{
       font-size:12px;
-      opacity:0.75;
+      opacity:0.78;
       margin-top:8px;
-      line-height:1.4;
+      line-height:1.45;
       white-space:pre-line;
     }
   </style>
@@ -133,14 +143,15 @@
   <h1>Bowling Arsenal Builder</h1>
 
   <div class="tabs">
-    <button class="tabbtn active" data-tab="db">Database</button>
+    <button class="tabbtn active" data-tab="db">Ball List</button>
     <button class="tabbtn" data-tab="ars">My Arsenal</button>
     <button class="tabbtn" data-tab="rec">Recommendations</button>
   </div>
 
-  <!-- Database -->
+  <!-- Ball List -->
   <div id="panel-db" class="panel active">
     <input id="search" placeholder="Search by brand or ball name..." />
+    <div class="small" id="dbHint">Tip: Balls you add to your arsenal will disappear from this list.</div>
     <div id="dbList"></div>
   </div>
 
@@ -154,13 +165,12 @@
   <!-- Recommendations -->
   <div id="panel-rec" class="panel">
     <div id="missingSummary" class="small"></div>
-
     <select id="catSelect"></select>
     <div id="recList"></div>
   </div>
 
 <script>
-  // 1) Put your Google "Publish to web" CSV link here:
+  // Your Google Sheets published CSV link (already filled in)
   const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRbZWI7vO1tejo-yhWq-Rga9AZZqDWJ3gZXo2RHFpOXERHhleUpgfP_M86UeX14D-xVSFbMoo1iD5t/pub?gid=0&single=true&output=csv";
 
   // Fixed 8 categories
@@ -197,12 +207,13 @@
       document.getElementById(`panel-${tab}`).classList.add("active");
 
       // Refresh panels on open
+      if(tab === "db") renderDBList();
       if(tab === "ars") renderArsenal();
       if(tab === "rec") renderRecommendations();
     });
   });
 
-  // --- CSV parsing (handles commas inside quotes) ---
+  // --- Robust CSV parsing (handles commas inside quotes) ---
   function parseCSV(text){
     const rows = [];
     let row = [], cur = "", inQuotes = false;
@@ -221,6 +232,7 @@
         row.push(cur.trim()); cur = ""; continue;
       }
       if((ch === '\n' || ch === '\r') && !inQuotes){
+        // ignore empty line breaks
         if(cur.length || row.length){
           row.push(cur.trim());
           rows.push(row);
@@ -239,12 +251,16 @@
 
   // --- Load database from CSV ---
   async function loadDatabase(){
-    const res = await fetch(CSV_URL);
+    const res = await fetch(CSV_URL, { cache: "no-store" });
     const csv = await res.text();
     const table = parseCSV(csv);
 
+    if(!table.length){
+      throw new Error("CSV is empty.");
+    }
+
     // Expect headers: Brand,Ball,Category,Image,ReleaseYear,Notes
-    const headers = table[0].map(h => h.replace(/\uFEFF/g,"")); // strip BOM if present
+    const headers = table[0].map(h => (h || "").replace(/\uFEFF/g,"").trim()); // strip BOM
     const idx = (name) => headers.findIndex(h => h.toLowerCase() === name.toLowerCase());
 
     const iBrand = idx("Brand");
@@ -254,32 +270,39 @@
     const iYear = idx("ReleaseYear");
     const iNotes = idx("Notes");
 
+    if(iBall === -1 || iCategory === -1){
+      throw new Error("Missing required columns. Your sheet needs headers: Brand, Ball, Category, Image, ReleaseYear, Notes");
+    }
+
     balls = table.slice(1)
-      .filter(r => r[iBall] && r[iCategory])
+      .filter(r => (r[iBall] || "").trim() && (r[iCategory] || "").trim())
       .map(r => ({
-        brand: r[iBrand] || "",
-        name: r[iBall] || "",
-        category: r[iCategory] || "",
-        image: r[iImage] || "",
-        year: r[iYear] || "",
-        notes: r[iNotes] || ""
+        brand: (r[iBrand] || "").trim(),
+        name: (r[iBall] || "").trim(),
+        category: (r[iCategory] || "").trim(),
+        image: (r[iImage] || "").trim(),
+        year: (r[iYear] || "").trim(),
+        notes: (r[iNotes] || "").trim()
       }));
 
-    renderDBList();
     setupCategoryDropdown();
+    renderDBList();
   }
 
-  // --- Database list ---
+  // --- Ball List ---
   function renderDBList(){
     const q = (document.getElementById("search").value || "").toLowerCase();
     const list = document.getElementById("dbList");
     list.innerHTML = "";
 
-    const filtered = balls.filter(b =>
-      (b.brand + " " + b.name).toLowerCase().includes(q)
-    );
+    const arsenal = getArsenal();
+    const owned = new Set(arsenal.map(a => a.name)); // Hide owned by name
 
-    filtered.slice(0, 300).forEach(b => {
+    const filtered = balls
+      .filter(b => !owned.has(b.name))  // <-- removes balls already in arsenal
+      .filter(b => (b.brand + " " + b.name).toLowerCase().includes(q));
+
+    filtered.slice(0, 400).forEach(b => {
       const div = document.createElement("div");
       div.className = "ball";
       div.innerHTML = `
@@ -295,7 +318,7 @@
     });
 
     if(filtered.length === 0){
-      list.innerHTML = `<div class="small">No matches. Try a different search.</div>`;
+      list.innerHTML = `<div class="small">No matches (or you already own everything matching this search).</div>`;
     }
   }
 
@@ -303,11 +326,17 @@
 
   function addToArsenal(name, category){
     const arsenal = getArsenal();
-    // prevent exact duplicates
-    if(arsenal.some(x => x.name === name && x.category === category)) return;
+
+    // prevent duplicates by name
+    if(arsenal.some(x => x.name === name)) return;
+
     arsenal.push({name, category});
     setArsenal(arsenal);
-    alert("Added to arsenal!");
+
+    // refresh all UI so it updates instantly
+    renderDBList();          // ball disappears from Ball List
+    renderArsenal();         // shows up in arsenal
+    renderRecommendations(); // updates missing slots + recs
   }
 
   // --- My Arsenal ---
@@ -336,12 +365,12 @@
       grid.appendChild(slot);
     });
 
-    // List of items with remove buttons
+    // List with remove buttons
     const list = document.getElementById("arsenalList");
     list.innerHTML = "";
 
     if(arsenal.length === 0){
-      list.innerHTML = `<div class="small">Your arsenal is empty. Go to the Database tab and tap “Add”.</div>`;
+      list.innerHTML = `<div class="small">Your arsenal is empty. Go to the Ball List tab and tap “Add”.</div>`;
       return;
     }
 
@@ -363,13 +392,20 @@
     const arsenal = getArsenal();
     arsenal.splice(index, 1);
     setArsenal(arsenal);
+
+    // refresh all UI so removed ball returns to Ball List
     renderArsenal();
+    renderRecommendations();
+    renderDBList();
   }
 
   function clearArsenal(){
     if(!confirm("Clear your entire arsenal?")) return;
     setArsenal([]);
+
     renderArsenal();
+    renderRecommendations();
+    renderDBList();
   }
 
   // --- Recommendations ---
@@ -388,34 +424,34 @@
     const arsenal = getArsenal();
     const owned = new Set(arsenal.map(a => a.name));
 
-    // Missing categories summary
+    // Missing categories
     const missingCats = CATEGORIES.filter(cat => !arsenal.some(a => a.category === cat));
     document.getElementById("missingSummary").textContent =
       missingCats.length
         ? `Missing slots:\n• ${missingCats.join("\n• ")}`
         : "Nice — you have at least one ball in every slot.";
 
-    // Auto-select first missing category if any
+    // Auto-select first missing category (if possible)
     const sel = document.getElementById("catSelect");
-    if(missingCats.length && sel.value && !missingCats.includes(sel.value)){
-      sel.value = missingCats[0];
-    } else if(missingCats.length && !sel.value){
-      sel.value = missingCats[0];
+    if(missingCats.length){
+      if(!missingCats.includes(sel.value)) sel.value = missingCats[0];
+    } else {
+      if(!sel.value) sel.value = CATEGORIES[0];
     }
 
     const chosen = sel.value || CATEGORIES[0];
 
-    // Recommend balls in that category excluding owned
+    // Recommend: balls in chosen category, excluding owned
     const recs = balls
       .filter(b => b.category === chosen)
       .filter(b => !owned.has(b.name))
-      .slice(0, 50);
+      .slice(0, 80);
 
     const list = document.getElementById("recList");
     list.innerHTML = "";
 
     if(recs.length === 0){
-      list.innerHTML = `<div class="small">No recommendations found for ${chosen}. Add more balls to your database or you may already own the options listed.</div>`;
+      list.innerHTML = `<div class="small">No recommendations found for ${escapeHtml(chosen)} (or you already own the options listed). Add more balls to your database.</div>`;
       return;
     }
 
@@ -445,10 +481,15 @@
     return (str || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
   }
 
-  // Load on start
+  // Start
   loadDatabase().catch(err => {
-    document.getElementById("dbList").innerHTML =
-      `<div class="small">Could not load your CSV. Check that your CSV link is correct and publicly accessible.\n\nError: ${String(err)}</div>`;
+    const msg = `Could not load your CSV. Check:
+1) The sheet is published to web as CSV
+2) Headers are: Brand, Ball, Category, Image, ReleaseYear, Notes
+3) The link opens in a browser
+
+Error: ${String(err)}`;
+    document.getElementById("dbList").innerHTML = `<div class="small">${escapeHtml(msg)}</div>`;
   });
 </script>
 </body>
