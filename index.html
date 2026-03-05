@@ -5,137 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
-    body{
-      font-family: Arial, sans-serif;
-      background:#121212;
-      color:#fff;
-      padding:16px;
-      margin:0;
-    }
-    h1{ margin: 8px 0 14px; font-size: 22px; }
+    body{font-family:Arial,sans-serif;background:#121212;color:#fff;padding:16px;margin:0}
+    h1{margin:8px 0 14px;font-size:22px}
 
     /* Clear 3-tab UI */
-    .tabs{
-      display:flex;
-      gap:10px;
-      margin-bottom:14px;
-      position: sticky;
-      top: 0;
-      background:#121212;
-      padding: 12px 0;
-      z-index: 10;
-    }
-    .tabbtn{
-      flex:1;
-      padding:12px 12px;
-      border-radius:12px;
-      border:1px solid #2a2a2a;
-      background:#1a1a1a;
-      color:#fff;
-      cursor:pointer;
-      font-weight:700;
-      font-size:14px;
-    }
-    .tabbtn.active{
-      background:#3a7cff;
-      border-color:#3a7cff;
-    }
+    .tabs{display:flex;gap:10px;margin-bottom:14px;position:sticky;top:0;background:#121212;padding:12px 0;z-index:10}
+    .tabbtn{flex:1;padding:12px;border-radius:12px;border:1px solid #2a2a2a;background:#1a1a1a;color:#fff;cursor:pointer;font-weight:700;font-size:14px}
+    .tabbtn.active{background:#3a7cff;border-color:#3a7cff}
 
-    .panel{ display:none; }
-    .panel.active{ display:block; }
+    .panel{display:none}
+    .panel.active{display:block}
 
-    input, select{
-      width:100%;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid #2a2a2a;
-      background:#1a1a1a;
-      color:#fff;
-      margin-bottom:12px;
-      box-sizing:border-box;
-      font-size:14px;
-    }
+    input,select{width:100%;padding:10px 12px;border-radius:12px;border:1px solid #2a2a2a;background:#1a1a1a;color:#fff;margin-bottom:12px;box-sizing:border-box;font-size:14px}
 
-    .ball{
-      background:#1e1e1e;
-      padding:12px;
-      margin:10px 0;
-      border-radius:12px;
-      display:flex;
-      gap:12px;
-      align-items:center;
-      border:1px solid #2a2a2a;
-    }
-    .ball img{
-      width:60px;
-      height:60px;
-      border-radius:14px;
-      object-fit:cover;
-      background:#0f0f0f;
-    }
-    .ball .meta{
-      flex:1;
-      min-width:0;
-    }
-    .ball .meta b{
-      display:block;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      font-size:15px;
-    }
-    .ball .meta .cat{ opacity:0.85; margin-top:3px; font-size:13px; }
-    .ball .meta .sub{ opacity:0.65; margin-top:2px; font-size:12px; }
+    .ball{background:#1e1e1e;padding:12px;margin:10px 0;border-radius:12px;display:flex;gap:12px;align-items:center;border:1px solid #2a2a2a}
+    .ball img{width:60px;height:60px;border-radius:14px;object-fit:cover;background:#0f0f0f}
+    .ball .meta{flex:1;min-width:0}
+    .ball .meta b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px}
+    .ball .meta .cat{opacity:.85;margin-top:3px;font-size:13px}
+    .small{font-size:12px;opacity:.78;margin-top:8px;line-height:1.45;white-space:pre-line}
 
-    button{
-      background:#3a7cff;
-      border:none;
-      padding:9px 12px;
-      color:white;
-      border-radius:12px;
-      cursor:pointer;
-      white-space:nowrap;
-      font-weight:700;
-    }
-    button.secondary{
-      background:#2a2a2a;
-    }
+    button{background:#3a7cff;border:none;padding:9px 12px;color:#fff;border-radius:12px;cursor:pointer;white-space:nowrap;font-weight:700}
+    button.secondary{background:#2a2a2a}
 
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:10px;
-      margin-top:10px;
-    }
-    .slot{
-      border:1px solid #2a2a2a;
-      background:#1a1a1a;
-      border-radius:12px;
-      padding:12px;
-    }
-    .slot .row{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-    }
-    .badge{
-      padding:4px 10px;
-      border-radius:999px;
-      font-size:12px;
-      border:1px solid #2a2a2a;
-      background:#141414;
-      font-weight:700;
-    }
-    .missing{ border-color:#ff5a5a; color:#ffb0b0; }
-    .covered{ border-color:#4dd97a; color:#b8ffd0; }
-    .small{
-      font-size:12px;
-      opacity:0.78;
-      margin-top:8px;
-      line-height:1.45;
-      white-space:pre-line;
-    }
+    .grid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
+    .slot{border:1px solid #2a2a2a;background:#1a1a1a;border-radius:12px;padding:12px}
+    .slot .row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .badge{padding:4px 10px;border-radius:999px;font-size:12px;border:1px solid #2a2a2a;background:#141414;font-weight:700}
+    .missing{border-color:#ff5a5a;color:#ffb0b0}
+    .covered{border-color:#4dd97a;color:#b8ffd0}
   </style>
 </head>
 
@@ -170,7 +68,7 @@
   </div>
 
 <script>
-  // Your Google Sheets published CSV link (already filled in)
+  // Your published CSV link
   const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRbZWI7vO1tejo-yhWq-Rga9AZZqDWJ3gZXo2RHFpOXERHhleUpgfP_M86UeX14D-xVSFbMoo1iD5t/pub?gid=0&single=true&output=csv";
 
   // Fixed 8 categories
@@ -185,18 +83,12 @@
     "Urethane-like"
   ];
 
-  // In-memory database
   let balls = [];
 
-  // Local arsenal (persisted)
-  function getArsenal(){
-    return JSON.parse(localStorage.getItem("arsenal") || "[]");
-  }
-  function setArsenal(a){
-    localStorage.setItem("arsenal", JSON.stringify(a));
-  }
+  function getArsenal(){ return JSON.parse(localStorage.getItem("arsenal") || "[]"); }
+  function setArsenal(a){ localStorage.setItem("arsenal", JSON.stringify(a)); }
 
-  // --- Tabs ---
+  // Tabs
   document.querySelectorAll(".tabbtn").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".tabbtn").forEach(b => b.classList.remove("active"));
@@ -206,100 +98,77 @@
       document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
       document.getElementById(`panel-${tab}`).classList.add("active");
 
-      // Refresh panels on open
       if(tab === "db") renderDBList();
       if(tab === "ars") renderArsenal();
       if(tab === "rec") renderRecommendations();
     });
   });
 
-  // --- Robust CSV parsing (handles commas inside quotes) ---
+  // Robust CSV parser (handles quoted commas)
   function parseCSV(text){
     const rows = [];
     let row = [], cur = "", inQuotes = false;
 
-    for(let i=0; i<text.length; i++){
-      const ch = text[i];
-      const next = text[i+1];
+    for(let i=0;i<text.length;i++){
+      const ch = text[i], next = text[i+1];
 
-      if(ch === '"' && inQuotes && next === '"'){ // escaped quote
-        cur += '"'; i++; continue;
-      }
-      if(ch === '"'){
-        inQuotes = !inQuotes; continue;
-      }
-      if(ch === ',' && !inQuotes){
-        row.push(cur.trim()); cur = ""; continue;
-      }
+      if(ch === '"' && inQuotes && next === '"'){ cur += '"'; i++; continue; }
+      if(ch === '"'){ inQuotes = !inQuotes; continue; }
+
+      if(ch === ',' && !inQuotes){ row.push(cur.trim()); cur=""; continue; }
+
       if((ch === '\n' || ch === '\r') && !inQuotes){
-        // ignore empty line breaks
-        if(cur.length || row.length){
-          row.push(cur.trim());
-          rows.push(row);
-        }
-        row = []; cur = "";
-        continue;
+        if(cur.length || row.length){ row.push(cur.trim()); rows.push(row); }
+        row=[]; cur=""; continue;
       }
       cur += ch;
     }
-    if(cur.length || row.length){
-      row.push(cur.trim());
-      rows.push(row);
-    }
+    if(cur.length || row.length){ row.push(cur.trim()); rows.push(row); }
     return rows;
   }
 
-  // --- Load database from CSV ---
+  // Load database from CSV
   async function loadDatabase(){
     const res = await fetch(CSV_URL, { cache: "no-store" });
     const csv = await res.text();
     const table = parseCSV(csv);
+    if(!table.length) throw new Error("CSV is empty.");
 
-    if(!table.length){
-      throw new Error("CSV is empty.");
-    }
-
-    // Expect headers: Brand,Ball,Category,Image,ReleaseYear,Notes
-    const headers = table[0].map(h => (h || "").replace(/\uFEFF/g,"").trim()); // strip BOM
+    const headers = table[0].map(h => (h || "").replace(/\uFEFF/g,"").trim());
     const idx = (name) => headers.findIndex(h => h.toLowerCase() === name.toLowerCase());
 
     const iBrand = idx("Brand");
-    const iBall = idx("Ball");
+    const iBallName = idx("Ball Name");   // <-- your header
     const iCategory = idx("Category");
     const iImage = idx("Image");
-    const iYear = idx("ReleaseYear");
-    const iNotes = idx("Notes");
 
-    if(iBall === -1 || iCategory === -1){
-      throw new Error("Missing required columns. Your sheet needs headers: Brand, Ball, Category, Image, ReleaseYear, Notes");
+    if(iBallName === -1 || iCategory === -1){
+      throw new Error('Missing required columns. Your sheet must have headers: "Brand", "Ball Name", "Category", "Image".');
     }
 
     balls = table.slice(1)
-      .filter(r => (r[iBall] || "").trim() && (r[iCategory] || "").trim())
+      .filter(r => (r[iBallName] || "").trim() && (r[iCategory] || "").trim())
       .map(r => ({
         brand: (r[iBrand] || "").trim(),
-        name: (r[iBall] || "").trim(),
+        name: (r[iBallName] || "").trim(),
         category: (r[iCategory] || "").trim(),
-        image: (r[iImage] || "").trim(),
-        year: (r[iYear] || "").trim(),
-        notes: (r[iNotes] || "").trim()
+        image: (r[iImage] || "").trim()
       }));
 
     setupCategoryDropdown();
     renderDBList();
   }
 
-  // --- Ball List ---
+  // Ball List (hide owned balls)
   function renderDBList(){
     const q = (document.getElementById("search").value || "").toLowerCase();
     const list = document.getElementById("dbList");
     list.innerHTML = "";
 
-    const arsenal = getArsenal();
-    const owned = new Set(arsenal.map(a => a.name)); // Hide owned by name
+    const owned = new Set(getArsenal().map(a => a.name));
 
     const filtered = balls
-      .filter(b => !owned.has(b.name))  // <-- removes balls already in arsenal
+      .filter(b => !owned.has(b.name))
       .filter(b => (b.brand + " " + b.name).toLowerCase().includes(q));
 
     filtered.slice(0, 400).forEach(b => {
@@ -310,7 +179,6 @@
         <div class="meta">
           <b>${escapeHtml(b.brand)} ${escapeHtml(b.name)}</b>
           <div class="cat">${escapeHtml(b.category)}</div>
-          <div class="sub">${b.year ? "Release: " + escapeHtml(b.year) : ""}</div>
         </div>
         <button onclick="addToArsenal('${escapeJs(b.name)}','${escapeJs(b.category)}')">Add</button>
       `;
@@ -326,35 +194,30 @@
 
   function addToArsenal(name, category){
     const arsenal = getArsenal();
-
-    // prevent duplicates by name
-    if(arsenal.some(x => x.name === name)) return;
-
+    if(arsenal.some(x => x.name === name)) return; // prevent dupes
     arsenal.push({name, category});
     setArsenal(arsenal);
 
-    // refresh all UI so it updates instantly
-    renderDBList();          // ball disappears from Ball List
-    renderArsenal();         // shows up in arsenal
-    renderRecommendations(); // updates missing slots + recs
+    // refresh all UI
+    renderDBList();
+    renderArsenal();
+    renderRecommendations();
   }
 
-  // --- My Arsenal ---
+  // My Arsenal
   function renderArsenal(){
     const arsenal = getArsenal();
 
-    // Grid by category
     const grid = document.getElementById("arsenalGrid");
     grid.innerHTML = "";
 
     CATEGORIES.forEach(cat => {
       const inCat = arsenal.filter(a => a.category === cat).map(a => a.name);
-      const slot = document.createElement("div");
-      slot.className = "slot";
-
       const statusClass = inCat.length ? "covered" : "missing";
       const statusText = inCat.length ? "Covered" : "Missing";
 
+      const slot = document.createElement("div");
+      slot.className = "slot";
       slot.innerHTML = `
         <div class="row">
           <div><b>${cat}</b></div>
@@ -365,7 +228,6 @@
       grid.appendChild(slot);
     });
 
-    // List with remove buttons
     const list = document.getElementById("arsenalList");
     list.innerHTML = "";
 
@@ -393,22 +255,20 @@
     arsenal.splice(index, 1);
     setArsenal(arsenal);
 
-    // refresh all UI so removed ball returns to Ball List
     renderArsenal();
     renderRecommendations();
-    renderDBList();
+    renderDBList(); // so it returns to Ball List
   }
 
   function clearArsenal(){
     if(!confirm("Clear your entire arsenal?")) return;
     setArsenal([]);
-
     renderArsenal();
     renderRecommendations();
     renderDBList();
   }
 
-  // --- Recommendations ---
+  // Recommendations
   function setupCategoryDropdown(){
     const sel = document.getElementById("catSelect");
     sel.innerHTML = "";
@@ -424,14 +284,12 @@
     const arsenal = getArsenal();
     const owned = new Set(arsenal.map(a => a.name));
 
-    // Missing categories
     const missingCats = CATEGORIES.filter(cat => !arsenal.some(a => a.category === cat));
     document.getElementById("missingSummary").textContent =
       missingCats.length
         ? `Missing slots:\n• ${missingCats.join("\n• ")}`
         : "Nice — you have at least one ball in every slot.";
 
-    // Auto-select first missing category (if possible)
     const sel = document.getElementById("catSelect");
     if(missingCats.length){
       if(!missingCats.includes(sel.value)) sel.value = missingCats[0];
@@ -441,7 +299,6 @@
 
     const chosen = sel.value || CATEGORIES[0];
 
-    // Recommend: balls in chosen category, excluding owned
     const recs = balls
       .filter(b => b.category === chosen)
       .filter(b => !owned.has(b.name))
@@ -463,7 +320,6 @@
         <div class="meta">
           <b>${escapeHtml(b.brand)} ${escapeHtml(b.name)}</b>
           <div class="cat">${escapeHtml(b.category)}</div>
-          <div class="sub">${b.year ? "Release: " + escapeHtml(b.year) : ""}</div>
         </div>
         <button onclick="addToArsenal('${escapeJs(b.name)}','${escapeJs(b.category)}')">Add</button>
       `;
@@ -471,7 +327,7 @@
     });
   }
 
-  // --- Helpers ---
+  // Helpers
   function escapeHtml(str){
     return (str || "").replace(/[&<>"']/g, m => ({
       "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
@@ -485,7 +341,7 @@
   loadDatabase().catch(err => {
     const msg = `Could not load your CSV. Check:
 1) The sheet is published to web as CSV
-2) Headers are: Brand, Ball, Category, Image, ReleaseYear, Notes
+2) Headers are: Brand, Ball Name, Category, Image
 3) The link opens in a browser
 
 Error: ${String(err)}`;
